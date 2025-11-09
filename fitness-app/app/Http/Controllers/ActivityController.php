@@ -1,90 +1,154 @@
 <?php
 
-require_once __DIR__ . '/../../Models/Activity.php';
+namespace App\Http\Controllers;
 
-class ActivityController
+use App\Models\Activity;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+
+class ActivityController extends Controller
 {
-    private $activityModel;
-    
-    public function __construct()
+    /**
+     * Display a listing of the activities with pagination and search.
+     */
+    public function index(Request $request): View
     {
-        $this->activityModel = new Activity();
-    }
-    
-    public function index()
-    {
-        $this->checkAuth();
-        
-        $userId = $_SESSION['user_id'];
-        $activities = $this->activityModel->findByUserId($userId);
-        
-        $this->render('activities/index', ['activities' => $activities]);
-    }
-    
-    public function create()
-    {
-        $this->checkAuth();
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $activities = $_POST['activities'] ?? [];
-            
-            foreach ($activities as $activity) {
-                if (!empty($activity['activity'])) {
-                    $data = [
-                        'user_id' => $_SESSION['user_id'],
-                        'date' => $_POST['date'] ?? date('Y-m-d'),
-                        'time_start' => $_POST['time_start'] ?? null,
-                        'time_end' => $_POST['time_end'] ?? null,
-                        'activity' => $activity['activity'],
-                        'time_spent' => $activity['time_spent'] ?? '',
-                        'distance' => $activity['distance'] ?? '',
-                        'set_count' => $activity['set_count'] ?? 0,
-                        'reps' => $activity['reps'] ?? 0,
-                        'note' => $activity['note'] ?? ''
-                    ];
-                    
-                    $this->activityModel->create($data);
-                }
-            }
-            
-            header('Location: /activities');
-            exit;
+        $query = Activity::query()->orderBy('date', 'desc')->orderBy('time_start', 'desc');
+
+        // Search functionality (extra credit)
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('activity', 'like', "%{$search}%")
+                  ->orWhere('note', 'like', "%{$search}%");
+            });
         }
-        
-        $this->render('activities/create');
+
+        // Pagination (extra credit)
+        $activities = $query->paginate(10)->withQueryString();
+
+        return view('activities.index', compact('activities'));
     }
-    
-    public function search()
+
+    /**
+     * Show the form for creating a new activity.
+     */
+    public function create(): View
     {
-        $this->checkAuth();
-        
-        $userId = $_SESSION['user_id'];
-        $activities = [];
-        $searchDate = '';
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search_date'])) {
-            $searchDate = $_POST['search_date'];
-            $activities = $this->activityModel->findByUserIdAndDate($userId, $searchDate);
-        }
-        
-        $this->render('activities/search', [
-            'activities' => $activities,
-            'searchDate' => $searchDate
+        return view('activities.create');
+    }
+
+    /**
+     * Store a newly created activity in storage.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        // Validation (extra credit)
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'time_start' => 'nullable|date_format:H:i',
+            'time_end' => 'nullable|date_format:H:i|after_or_equal:time_start',
+            'activity' => 'required|string|max:255',
+            'time_spent' => 'nullable|string|max:50',
+            'distance' => 'nullable|string|max:50',
+            'set_count' => 'nullable|integer|min:0',
+            'reps' => 'nullable|integer|min:0',
+            'note' => 'nullable|string',
+        ], [
+            'date.required' => 'The date field is required.',
+            'date.date' => 'The date must be a valid date.',
+            'time_end.after_or_equal' => 'The end time must be after or equal to the start time.',
+            'activity.required' => 'The activity name is required.',
+            'activity.max' => 'The activity name may not be greater than 255 characters.',
         ]);
+
+        Activity::create($validated);
+
+        return redirect()->route('activities.index')
+            ->with('success', 'Activity created successfully.');
     }
-    
-    private function checkAuth()
+
+    /**
+     * Display the specified activity.
+     */
+    public function show(Activity $activity): View
     {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: /');
-            exit;
+        return view('activities.show', compact('activity'));
+    }
+
+    /**
+     * Show the form for editing the specified activity.
+     */
+    public function edit(Activity $activity): View
+    {
+        return view('activities.edit', compact('activity'));
+    }
+
+    /**
+     * Update the specified activity in storage.
+     */
+    public function update(Request $request, Activity $activity): RedirectResponse
+    {
+        // Validation (extra credit)
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'time_start' => 'nullable|date_format:H:i',
+            'time_end' => 'nullable|date_format:H:i|after_or_equal:time_start',
+            'activity' => 'required|string|max:255',
+            'time_spent' => 'nullable|string|max:50',
+            'distance' => 'nullable|string|max:50',
+            'set_count' => 'nullable|integer|min:0',
+            'reps' => 'nullable|integer|min:0',
+            'note' => 'nullable|string',
+        ], [
+            'date.required' => 'The date field is required.',
+            'date.date' => 'The date must be a valid date.',
+            'time_end.after_or_equal' => 'The end time must be after or equal to the start time.',
+            'activity.required' => 'The activity name is required.',
+            'activity.max' => 'The activity name may not be greater than 255 characters.',
+        ]);
+
+        $activity->update($validated);
+
+        return redirect()->route('activities.index')
+            ->with('success', 'Activity updated successfully.');
+    }
+
+    /**
+     * Remove the specified activity from storage.
+     */
+    public function destroy(Activity $activity): RedirectResponse
+    {
+        $activity->delete();
+
+        return redirect()->route('activities.index')
+            ->with('success', 'Activity deleted successfully.');
+    }
+
+    /**
+     * Search activities by date or keyword (extra credit).
+     */
+    public function search(Request $request): View
+    {
+        $query = Activity::query()->orderBy('date', 'desc')->orderBy('time_start', 'desc');
+
+        if ($request->has('search_date') && $request->search_date) {
+            $query->where('date', $request->search_date);
         }
-    }
-    
-    private function render($view, $data = [])
-    {
-        extract($data);
-        include __DIR__ . '/../../../resources/views/' . $view . '.php';
+
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('activity', 'like', "%{$search}%")
+                  ->orWhere('note', 'like', "%{$search}%");
+            });
+        }
+
+        $activities = $query->paginate(10)->withQueryString();
+        $searchDate = $request->search_date ?? '';
+        $searchTerm = $request->search ?? '';
+
+        return view('activities.search', compact('activities', 'searchDate', 'searchTerm'));
     }
 }

@@ -1,47 +1,41 @@
 <?php
 
-require_once __DIR__ . '/../SimpleDB.php';
+namespace App\Models;
 
-class Activity
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Activity extends Model
 {
-    public function create($data)
-    {
-        return SimpleDB::addActivity($data);
-    }
-    
-    public function findByUserId($userId)
-    {
-        return SimpleDB::getActivitiesByUserId($userId);
-    }
-    
-    public function findByUserIdAndDate($userId, $date)
-    {
-        return SimpleDB::getActivitiesByUserIdAndDate($userId, $date);
-    }
-    
-    public function findById($id)
-    {
-        // Mock implementation
-        return ['id' => $id, 'activity' => 'Mock Activity'];
-    }
-    
-    public function getAll()
-    {
-        return SimpleDB::getAllActivities();
-    }
-    
-    public function update($id, $data)
-    {
-        return true; // Mock update
-    }
-    
-    public function delete($id)
-    {
-        return true; // Mock delete
-    }
-    
-    public function getStatsByUserId($userId)
-    {
-        return SimpleDB::getUserStats($userId);
-    }
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'date',
+        'time_start',
+        'time_end',
+        'activity',
+        'time_spent',
+        'distance',
+        'set_count',
+        'reps',
+        'note',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'date' => 'date',
+        'time_start' => 'datetime',
+        'time_end' => 'datetime',
+        'set_count' => 'integer',
+        'reps' => 'integer',
+    ];
 }
