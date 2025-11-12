@@ -128,6 +128,10 @@ The CSS demonstrates advanced techniques:
 
 ## Notes for Teacher
 
+- **PHP Version**: This project requires PHP 8.2 or higher. Please ensure PHP 8.2+ is installed before running `composer install`.
+
+- **Vendor Folder**: The `vendor` folder is NOT committed to git (correctly excluded in `.gitignore`). It will be created when running `composer install` - this is expected and correct. The submission requirements specify NOT to include vendor in the zip file, but it must be installed to run the project.
+
 - The project uses SQLite by default (no MySQL setup required)
 - If MySQL is preferred, update `.env` file with database credentials
 - All forms properly re-populate on validation errors
