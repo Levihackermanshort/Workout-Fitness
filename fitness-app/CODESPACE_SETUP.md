@@ -10,17 +10,32 @@ These are the exact commands your teacher will use to set up and run the project
 
 ## Step-by-Step Commands
 
-### 0. Check/Upgrade PHP Version (if needed)
+### 0. Check/Upgrade PHP Version (REQUIRED - MUST DO THIS FIRST!)
 ```bash
 php -v
 ```
 
-If PHP version is below 8.2, upgrade it:
+**If PHP version is below 8.2, you MUST upgrade it before running composer install:**
+
 ```bash
-# For Ubuntu/Debian-based Codespaces
+# Step 1: Add PHP repository and update
+sudo apt update
+sudo apt install -y software-properties-common
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+
+# Step 2: Install PHP 8.2 and required extensions
+sudo apt install -y php8.2 php8.2-cli php8.2-common php8.2-mbstring php8.2-xml php8.2-curl php8.2-zip php8.2-sqlite3 php8.2-bcmath
+
+# Step 3: Set PHP 8.2 as default
 sudo update-alternatives --set php /usr/bin/php8.2
-# Or install PHP 8.2 if not available
-sudo apt update && sudo apt install -y php8.2 php8.2-cli php8.2-mbstring php8.2-xml php8.2-curl php8.2-zip php8.2-sqlite3
+
+# Step 4: Verify the version
+php -v
+# Should show PHP 8.2.x
+
+# Step 5: Remove old composer.lock if it exists (it was created with PHP 8.0)
+rm -f composer.lock
 ```
 
 ### 1. Navigate to the application directory
@@ -106,15 +121,30 @@ php artisan serve --host=0.0.0.0 --port=8000
 
 ## For GitHub Codespace Specifically
 
-**Important:** First check PHP version and upgrade if needed:
+**CRITICAL: You MUST upgrade PHP to 8.2+ FIRST before running composer install!**
+
+**Step 1: Upgrade PHP (REQUIRED)**
 ```bash
+# Check current version
 php -v
-# If PHP < 8.2, run:
-sudo apt update && sudo apt install -y php8.2 php8.2-cli php8.2-mbstring php8.2-xml php8.2-curl php8.2-zip php8.2-sqlite3
+
+# Add PHP repository and install PHP 8.2
+sudo apt update
+sudo apt install -y software-properties-common
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+sudo apt install -y php8.2 php8.2-cli php8.2-common php8.2-mbstring php8.2-xml php8.2-curl php8.2-zip php8.2-sqlite3 php8.2-bcmath
 sudo update-alternatives --set php /usr/bin/php8.2
+
+# Verify it worked
+php -v  # Should show PHP 8.2.x
+
+# Remove old composer.lock (created with PHP 8.0)
+cd fitness-app
+rm -f composer.lock
 ```
 
-Then run all setup commands at once:
+**Step 2: Run setup commands**
 
 ```bash
 cd fitness-app && \
