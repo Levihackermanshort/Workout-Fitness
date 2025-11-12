@@ -26,6 +26,19 @@
         </form>
     </div>
 
+    @if($searchDate || $searchTerm)
+        <div class="search-results-info">
+            Found {{ $totalCount }} result(s)
+            @if($searchDate)
+                for date: {{ $searchDate }}
+            @endif
+            @if($searchTerm)
+                @if($searchDate), @endif
+                for keyword: "{{ $searchTerm }}"
+            @endif
+        </div>
+    @endif
+
     @if($activities->count() > 0)
         <div class="table-container">
             <table>

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreActivityRequest;
+use App\Http\Requests\UpdateActivityRequest;
 use App\Models\Activity;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,19 +18,23 @@ class ActivityController extends Controller
     {
         $query = Activity::query()->orderBy('date', 'desc')->orderBy('time_start', 'desc');
 
-        // Search functionality (extra credit)
+        // Search functionality (extra credit) - works with pagination
         if ($request->has('search') && $request->search) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('activity', 'like', "%{$search}%")
-                  ->orWhere('note', 'like', "%{$search}%");
+                  ->orWhere('note', 'like', "%{$search}%")
+                  ->orWhere('date', 'like', "%{$search}%");
             });
         }
 
-        // Pagination (extra credit)
+        // Pagination (extra credit) - complex pagination with page numbers
         $activities = $query->paginate(10)->withQueryString();
+        
+        // Get total count for search feedback
+        $totalCount = $activities->total();
 
-        return view('activities.index', compact('activities'));
+        return view('activities.index', compact('activities', 'totalCount'));
     }
 
     /**
@@ -41,29 +47,11 @@ class ActivityController extends Controller
 
     /**
      * Store a newly created activity in storage.
+     * Uses Form Request for validation (extra credit).
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreActivityRequest $request): RedirectResponse
     {
-        // Validation (extra credit)
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'time_start' => 'nullable|date_format:H:i',
-            'time_end' => 'nullable|date_format:H:i|after_or_equal:time_start',
-            'activity' => 'required|string|max:255',
-            'time_spent' => 'nullable|string|max:50',
-            'distance' => 'nullable|string|max:50',
-            'set_count' => 'nullable|integer|min:0',
-            'reps' => 'nullable|integer|min:0',
-            'note' => 'nullable|string',
-        ], [
-            'date.required' => 'The date field is required.',
-            'date.date' => 'The date must be a valid date.',
-            'time_end.after_or_equal' => 'The end time must be after or equal to the start time.',
-            'activity.required' => 'The activity name is required.',
-            'activity.max' => 'The activity name may not be greater than 255 characters.',
-        ]);
-
-        Activity::create($validated);
+        Activity::create($request->validated());
 
         return redirect()->route('activities.index')
             ->with('success', 'Activity created successfully.');
@@ -87,29 +75,11 @@ class ActivityController extends Controller
 
     /**
      * Update the specified activity in storage.
+     * Uses Form Request for validation (extra credit).
      */
-    public function update(Request $request, Activity $activity): RedirectResponse
+    public function update(UpdateActivityRequest $request, Activity $activity): RedirectResponse
     {
-        // Validation (extra credit)
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'time_start' => 'nullable|date_format:H:i',
-            'time_end' => 'nullable|date_format:H:i|after_or_equal:time_start',
-            'activity' => 'required|string|max:255',
-            'time_spent' => 'nullable|string|max:50',
-            'distance' => 'nullable|string|max:50',
-            'set_count' => 'nullable|integer|min:0',
-            'reps' => 'nullable|integer|min:0',
-            'note' => 'nullable|string',
-        ], [
-            'date.required' => 'The date field is required.',
-            'date.date' => 'The date must be a valid date.',
-            'time_end.after_or_equal' => 'The end time must be after or equal to the start time.',
-            'activity.required' => 'The activity name is required.',
-            'activity.max' => 'The activity name may not be greater than 255 characters.',
-        ]);
-
-        $activity->update($validated);
+        $activity->update($request->validated());
 
         return redirect()->route('activities.index')
             ->with('success', 'Activity updated successfully.');
@@ -128,6 +98,7 @@ class ActivityController extends Controller
 
     /**
      * Search activities by date or keyword (extra credit).
+     * Enhanced search with result count and pagination support.
      */
     public function search(Request $request): View
     {
@@ -141,14 +112,16 @@ class ActivityController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('activity', 'like', "%{$search}%")
-                  ->orWhere('note', 'like', "%{$search}%");
+                  ->orWhere('note', 'like', "%{$search}%")
+                  ->orWhere('date', 'like', "%{$search}%");
             });
         }
 
         $activities = $query->paginate(10)->withQueryString();
         $searchDate = $request->search_date ?? '';
         $searchTerm = $request->search ?? '';
+        $totalCount = $activities->total();
 
-        return view('activities.search', compact('activities', 'searchDate', 'searchTerm'));
+        return view('activities.search', compact('activities', 'searchDate', 'searchTerm', 'totalCount'));
     }
 }

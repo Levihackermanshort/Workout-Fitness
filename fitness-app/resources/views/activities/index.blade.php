@@ -10,6 +10,16 @@
         <a href="{{ route('activities.search') }}" class="btn btn-secondary">Search Activities</a>
     </div>
 
+    @if(request('search'))
+        <div class="search-results-info">
+            Found {{ $totalCount }} result(s) for "{{ request('search') }}"
+        </div>
+    @elseif($totalCount > 0)
+        <div class="search-results-info">
+            Showing {{ $activities->firstItem() }} to {{ $activities->lastItem() }} of {{ $totalCount }} activities
+        </div>
+    @endif
+
     @if($activities->count() > 0)
         <div class="table-container">
             <table>
