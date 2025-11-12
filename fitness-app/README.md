@@ -54,16 +54,15 @@ The Controller layer acts as an intermediary between the Model and View, handlin
 **Example from code:**
 ```php
 // app/Http/Controllers/ActivityController.php
-public function store(Request $request): RedirectResponse
+public function store(StoreActivityRequest $request): RedirectResponse
 {
-    $validated = $request->validate([...]);
-    Activity::create($validated);
+    Activity::create($request->validated());
     return redirect()->route('activities.index')
         ->with('success', 'Activity created successfully.');
 }
 ```
 
-The controller receives HTTP requests, validates input, interacts with the model to perform database operations, and returns appropriate responses (views or redirects).
+The controller receives HTTP requests, uses Form Request classes for validation (demonstrating good practice), interacts with the model to perform database operations, and returns appropriate responses (views or redirects). All CRUD routes use Laravel's resource routing (`Route::resource('activities', ActivityController::class)`).
 
 ## Key Features
 
@@ -92,36 +91,92 @@ Laravel migrations (`database/migrations/2024_01_01_000001_create_activities_tab
 
 ### Additional Features (Extra Credit)
 
-1. **Search Functionality**: Users can search activities by date or keyword through the search page
-2. **Pagination**: Activity listings are paginated (10 items per page) for better performance and usability
-3. **Input Validation**: Laravel's validation system ensures data integrity with custom error messages
-4. **Laravel Components**: The application uses Blade components and directives effectively
+1. **Search Functionality**: Users can search activities by date or keyword. The search works seamlessly with pagination and shows result count feedback.
+2. **Pagination**: Activity listings are paginated (10 items per page) with complex pagination controls showing page numbers.
+3. **Input Validation**: Laravel's validation system ensures data integrity with complex validation rules (regex patterns, date constraints) and error messages displayed next to relevant form controls. Forms properly re-populate after validation failures.
+4. **Laravel Components**: The application uses Blade components for reusable UI elements (Alert, Button, FormField components).
+5. **Form Requests**: Validation is handled by dedicated Form Request classes (`StoreActivityRequest`, `UpdateActivityRequest`) for better code organization.
+6. **Route Resources**: All CRUD routes use Laravel's resource routing for cleaner, more maintainable route definitions.
+7. **Factories**: Database seeding uses the `ActivityFactory` to generate realistic test data (35 activities seeded for pagination demonstration).
+8. **Sessions**: Success messages are displayed using Laravel's session flash data for user feedback on create, update, and delete operations.
 
 ## Good Practices Implemented
 
-1. **Route Naming**: All routes are named using `route()` helper for maintainability
-2. **Form Validation**: Server-side validation prevents invalid data entry
-3. **Error Handling**: Validation errors are displayed to users with clear messages
-4. **Security**: CSRF protection is enabled for all forms
-5. **Code Organization**: Files are organized following Laravel's conventions
-6. **Responsive Design**: CSS is optimized for desktop viewing (1366x768 resolution)
+1. **Route Resources**: All CRUD routes use Laravel's resource routing (`Route::resource()`) for cleaner, more maintainable route definitions.
+2. **Form Requests**: Validation logic is separated into dedicated Form Request classes (`StoreActivityRequest`, `UpdateActivityRequest`) following the Single Responsibility Principle.
+3. **Factories**: Database seeding uses factories (`ActivityFactory`) to generate realistic test data, making it easy to populate the database with varied content.
+4. **Blade Components**: Reusable UI components (Alert, Button, FormField) promote code reusability and maintainability.
+5. **Session Flash Messages**: User feedback is provided through Laravel's session flash data for create, update, and delete operations.
+6. **Complex Validation Rules**: Validation includes regex patterns, date constraints, and custom error messages displayed inline next to form controls.
+7. **Form Re-population**: Forms properly re-populate with user input after validation failures, improving user experience.
+8. **Advanced CSS**: The application demonstrates complex CSS techniques including gradients, animations, transforms, and advanced layouts without using CSS frameworks.
+9. **Code Organization**: Files are organized following Laravel's conventions and best practices.
+10. **Security**: CSRF protection is enabled for all forms, and input validation prevents malicious data entry.
 
 ## Installation Instructions
 
-1. Clone the repository
-2. Copy `.env.example` to `.env` and configure database settings
-3. Run `composer install` to install dependencies
-4. Run `php artisan key:generate` to generate application key
-5. Run `php artisan migrate:fresh --seed` to create and populate the database
-6. Run `php artisan serve` to start the development server
-7. Access the application at `http://localhost:8000`
+**Important Note for Submission:**
+- The `vendor` folder and `node_modules` folder are **NOT** included in the submission (correctly excluded in `.gitignore`)
+- These folders will be created when running `composer install` - this is expected and correct
+- **Do NOT** include these folders in your submission zip file
+
+### Setup Commands (As Per Marking Criteria)
+
+To mark your work, a module tutor will follow these steps:
+
+1. **Clone your Github repo.**
+   ```bash
+   git clone <repository-url>
+   cd fitness-app
+   ```
+
+2. **Make changes to the .env file to match local settings**
+   ```bash
+   cp .env.example .env
+   ```
+   Note: The `.env.example` file is provided. Update database settings if needed (default uses SQLite).
+
+3. **Run composer install**
+   ```bash
+   composer install
+   ```
+   This will create the `vendor` folder (which is NOT committed to git and should NOT be in your submission zip).
+
+4. **Run php artisan key:generate**
+   ```bash
+   php artisan key:generate
+   ```
+   Note: The marking criteria mentions "php artisan key:migrate" but this appears to be a typo. The correct Laravel command is `php artisan key:generate` to generate the application encryption key.
+
+5. **Run migrations and seeders**
+   ```bash
+   php artisan migrate:fresh --seed
+   ```
+   This will:
+   - Drop all existing tables
+   - Create the activities table
+   - Seed 35 activities using the factory (enough to demonstrate pagination)
+
+6. **Run php artisan serve**
+   ```bash
+   php artisan serve
+   ```
+
+7. **Open a browser and test the app**
+   Navigate to: `http://localhost:8000`
+   
+   Test all CRUD operations:
+   - **Create**: Add new activities via `/activities/create`
+   - **Read**: View all activities at `/activities` and individual activities
+   - **Update**: Edit existing activities via `/activities/{id}/edit`
+   - **Delete**: Remove activities from the database
 
 ## Technical Stack
 
-- **Framework**: Laravel 11
-- **Database**: MySQL/MariaDB
+- **Framework**: Laravel 9
+- **Database**: SQLite (default) or MySQL/MariaDB
 - **PHP Version**: 8.2+
-- **Frontend**: HTML5, CSS3, Blade Templates
+- **Frontend**: HTML5, CSS3 (custom, no frameworks), Blade Templates
 - **Backend**: PHP, Eloquent ORM
 
 ## Conclusion
